@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PLANTORA - Crop Health Monitor</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f0f7f4; display: flex; justify-content: center; padding: 40px; }
+        .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 400px; }
+        h2 { color: #2e7d32; text-align: center; }
+        label { font-weight: bold; display: block; margin-top: 15px; }
+        select, input, button { width: 100%; padding: 10px; margin-top: 8px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; }
+        button { background: #2e7d32; color: white; font-weight: bold; border: none; cursor: pointer; margin-top: 20px; }
+        button:hover { background: #1b5e20; }
+        #result { margin-top: 20px; padding: 15px; background: #e8f5e9; border-radius: 5px; display: none; }
+        a { color: #1565c0; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>🌿 PLANTORA</h2>
+        <p style="text-align:center; color:#555;">AI Crop Disease Detection</p>
+
+        <label for="crop">Select Crop:</label>
+        <select id="crop">
+            <option value="rice">Rice</option>
+            <option value="tomato">Tomato</option>
+            <option value="potato">Potato</option>
+            <option value="chilli">Chilli</option>
+        </select>
+
+        <label for="image">Upload Leaf Image (JPG/PNG):</label>
+        <input type="file" id="image" accept=".jpg,.jpeg,.png">
+
+        <button onclick="predictDisease()">Analyze Crop</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function predictDisease() {
+            const crop = document.getElementById('crop').value;
+            const imageFile = document.getElementById('image').files[0];
+            const resultDiv = document.getElementById('result');
+
+            if (!imageFile) {
+                alert("Please select a leaf image first!");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('crop', crop);
+            formData.append('image', imageFile);
+
+            try {
+                const response = await fetch('/predict', { method: 'POST', body: formData });
+                const data = await response.json();
+
+                resultDiv.style.display = 'block';
+                if (data.status === 'success') {
+                    resultDiv.innerHTML = `
+                        <h3>Result: ${data.prediction}</h3>
+                        <p><strong>Crop:</strong> ${data.crop}</p>
+                        <p><strong>Confidence:</strong> ${data.confidence}</p>
+                        <p><strong>Remedy:</strong> ${data.remedy}</p>
+                        <p><a href="${data.buy_link}" target="_blank">🛒 Buy Recommended Medicine Online</a></p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p style="color:red;">Error: ${data.error}</p>`;
+                }
+            } catch (err) {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `<p style="color:red;">Server connection failed!</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
