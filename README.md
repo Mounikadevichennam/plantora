@@ -14,3 +14,24 @@ Git and GitHub integration successful.
 
 ## Requirements & Module Planning
 Detailed functional requirements, non-functional requirements, feature breakdown, development priorities, and module-wise task planning are documented in [requirements.md](documentation/requirements.md).
+
+# 🌿 PLANTORA – Intelligent Crop Health Monitoring & Smart Farming System
+
+## 📌 Project Overview
+**PLANTORA** is an AI-powered crop disease detection and remedy recommendation web application designed to help farmers quickly identify crop diseases from leaf images and get actionable treatment advice along with direct online medicine purchase links.
+
+## 🛠️ Technologies & Tools Used
+- **Backend:** Python 3.13, Flask
+- **Image Validation:** Pillow (PIL)
+- **Frontend:** HTML5, CSS3, JavaScript (Fetch API)
+- **Version Control:** Git & GitHub
+- **IDE:** Visual Studio Code
+
+## 📂 Current Project Structure
+```text
+plantora/
+├── backend/
+│   └── app.py          # Flask API, Pillow leaf validation & remedy routing
+├── frontend/
+│   └── index.html      # Interactive UI for crop selection & image upload
+└── README.md           # Project documentation & weekly progress
