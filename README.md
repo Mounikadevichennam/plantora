@@ -22,6 +22,7 @@ Detailed functional requirements, non-functional requirements, feature breakdown
 
 ## 🛠️ Technologies & Tools Used
 - **Backend:** Python 3.13, Flask
+- **Database:** SQLite (`sqlite3`)
 - **Image Validation:** Pillow (PIL)
 - **Frontend:** HTML5, CSS3, JavaScript (Fetch API)
 - **Version Control:** Git & GitHub
