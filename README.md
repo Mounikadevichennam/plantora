@@ -18,21 +18,30 @@ Detailed functional requirements, non-functional requirements, feature breakdown
 # 🌿 PLANTORA – Intelligent Crop Health Monitoring & Smart Farming System
 
 ## 📌 Project Overview
-**PLANTORA** is an AI-powered crop disease detection and remedy recommendation web application designed to help farmers quickly identify crop diseases from leaf images and get actionable treatment advice along with direct online medicine purchase links.
+**PLANTORA** is an AI-powered crop disease detection and remedy recommendation web application designed to help farmers identify crop diseases from leaf images, track scan history, and manage treatment status using a relational SQLite database.
 
 ## 🛠️ Technologies & Tools Used
 - **Backend:** Python 3.13, Flask
-- **Database:** SQLite (`sqlite3`)
+- **Database:** SQLite (`plantora.db`) with Relational Schema & Full CRUD
 - **Image Validation:** Pillow (PIL)
 - **Frontend:** HTML5, CSS3, JavaScript (Fetch API)
 - **Version Control:** Git & GitHub
-- **IDE:** Visual Studio Code
 
-## 📂 Current Project Structure
-```text
-plantora/
-├── backend/
-│   └── app.py          # Flask API, Pillow leaf validation & remedy routing
-├── frontend/
-│   └── index.html      # Interactive UI for crop selection & image upload
-└── README.md           # Project documentation & weekly progress
+## 🗄️ Database Schema (`plantora.db`)
+1. **`crops` Table:** `id` (PK), `name` (UNIQUE), `disease`, `confidence`, `remedy`, `buy_link`
+2. **`scans` Table:** `id` (PK), `crop_id` (FK -> `crops.id`), `crop`, `filename`, `disease`, `confidence`, `status` (`Pending`/`Treated`), `timestamp`
+
+## ✅ Completed Features (Up to Day 9)
+- RESTful Flask Backend with Pillow leaf-image validation.
+- Relational SQLite database (`crops` & `scans` tables) with Foreign Key mapping.
+- Full **CRUD Operations**:
+  - **Create:** `POST /predict` (logs new scans)
+  - **Read:** `GET /history` & `GET /db-tables` (fetches scans & table data)
+  - **Update:** `PUT /history/<id>` (marks scan status as `Treated`)
+  - **Delete:** `DELETE /history/<id>` (removes scan record)
+- Interactive Frontend UI with live Scan History table and instant Treated/Delete actions.
+
+## 🚀 How to Run Locally
+1. Install dependencies: `pip install flask pillow`
+2. Start server: `python backend/app.py`
+3. Open `http://127.0.0.1:5000/` in your browser.

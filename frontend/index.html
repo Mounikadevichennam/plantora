@@ -6,23 +6,28 @@
     <title>PLANTORA - Crop Health Monitor</title>
     <style>
         body { font-family: Arial, sans-serif; background: #f0f7f4; display: flex; flex-direction: column; align-items: center; padding: 30px; }
-        .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 450px; margin-bottom: 25px; }
+        .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 580px; max-width: 95%; margin-bottom: 25px; }
         h2, h3 { color: #2e7d32; text-align: center; }
         label { font-weight: bold; display: block; margin-top: 15px; }
-        select, input, button { width: 100%; padding: 10px; margin-top: 8px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; }
-        button { background: #2e7d32; color: white; font-weight: bold; border: none; cursor: pointer; margin-top: 20px; }
-        button:hover { background: #1b5e20; }
+        select, input, button.primary { width: 100%; padding: 10px; margin-top: 8px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; }
+        button.primary { background: #2e7d32; color: white; font-weight: bold; border: none; cursor: pointer; margin-top: 20px; }
+        button.primary:hover { background: #1b5e20; }
         #result { margin-top: 20px; padding: 15px; background: #e8f5e9; border-radius: 5px; display: none; }
         a { color: #1565c0; font-weight: bold; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background-color: #2e7d32; color: white; }
+        .btn-small { padding: 4px 8px; font-size: 11px; border: none; border-radius: 4px; cursor: pointer; color: white; margin-right: 4px; }
+        .btn-treat { background: #1976d2; }
+        .btn-del { background: #d32f2f; }
+        .badge-treated { color: #2e7d32; font-weight: bold; }
+        .badge-pending { color: #e65100; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="card">
         <h2>🌿 PLANTORA</h2>
-        <p style="text-align:center; color:#555;">AI Crop Disease Detection</p>
+        <p style="text-align:center; color:#555;">AI Crop Disease Detection & Database CRUD</p>
 
         <label for="crop">Select Crop:</label>
         <select id="crop">
@@ -35,24 +40,25 @@
         <label for="image">Upload Leaf Image (JPG/PNG):</label>
         <input type="file" id="image" accept=".jpg,.jpeg,.png">
 
-        <button onclick="predictDisease()">Analyze Crop</button>
+        <button class="primary" onclick="predictDisease()">Analyze Crop</button>
 
         <div id="result"></div>
     </div>
 
     <div class="card">
-        <h3>📜 Recent Scan History</h3>
+        <h3>📜 Recent Scan History (Database CRUD)</h3>
         <table>
             <thead>
                 <tr>
                     <th>Crop</th>
                     <th>Disease</th>
-                    <th>Confidence</th>
+                    <th>Status</th>
                     <th>Time</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody id="historyBody">
-                <tr><td colspan="4" style="text-align:center;">No scans yet.</td></tr>
+                <tr><td colspan="5" style="text-align:center;">No scans yet.</td></tr>
             </tbody>
         </table>
     </div>
@@ -69,16 +75,30 @@
                         <tr>
                             <td>${item.crop}</td>
                             <td>${item.disease}</td>
-                            <td>${item.confidence}</td>
+                            <td class="${item.status === 'Treated' ? 'badge-treated' : 'badge-pending'}">${item.status}</td>
                             <td>${item.timestamp}</td>
+                            <td>
+                                ${item.status !== 'Treated' ? `<button class="btn-small btn-treat" onclick="markTreated(${item.id})">Treated</button>` : ''}
+                                <button class="btn-small btn-del" onclick="deleteScan(${item.id})">Delete</button>
+                            </td>
                         </tr>
                     `).join('');
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No scans yet.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No scans yet.</td></tr>';
                 }
             } catch (err) {
                 console.error("Failed to load history:", err);
             }
+        }
+
+        async function markTreated(id) {
+            await fetch('/history/' + id, { method: 'PUT' });
+            loadHistory();
+        }
+
+        async function deleteScan(id) {
+            await fetch('/history/' + id, { method: 'DELETE' });
+            loadHistory();
         }
 
         async function predictDisease() {
@@ -108,17 +128,16 @@
                         <p><strong>Remedy:</strong> ${data.remedy}</p>
                         <p><a href="${data.buy_link}" target="_blank">🛒 Buy Recommended Medicine Online</a></p>
                     `;
-                    loadHistory(); // Refresh history table immediately
+                    loadHistory();
                 } else {
-                    resultDiv.innerHTML = `<p style="color:red;">Error: ${data.error}</p>`;
+                    resultDiv.innerHTML = '<p style="color:red;">Error: ' + data.error + '</p>';
                 }
             } catch (err) {
                 resultDiv.style.display = 'block';
-                resultDiv.innerHTML = `<p style="color:red;">Server connection failed!</p>`;
+                resultDiv.innerHTML = '<p style="color:red;">Server connection failed!</p>';
             }
         }
 
-        // Load history automatically when page opens
         window.onload = loadHistory;
     </script>
 </body>
