@@ -18,28 +18,40 @@ Detailed functional requirements, non-functional requirements, feature breakdown
 # 🌿 PLANTORA – Intelligent Crop Health Monitoring & Smart Farming System
 
 ## 📌 Project Overview
-**PLANTORA** is an AI-powered crop disease detection and remedy recommendation web application designed to help farmers identify crop diseases from leaf images, track scan history, and manage treatment status using a relational SQLite database.
+**PLANTORA** is an AI-powered crop disease detection and remedy recommendation web application with a Python/Flask RESTful backend, Pillow leaf-image validation, and a relational SQLite database.
 
 ## 🛠️ Technologies & Tools Used
-- **Backend:** Python 3.13, Flask
+- **Backend:** Python 3.13, Flask (REST API)
 - **Database:** SQLite (`plantora.db`) with Relational Schema & Full CRUD
 - **Image Validation:** Pillow (PIL)
 - **Frontend:** HTML5, CSS3, JavaScript (Fetch API)
+- **API Testing:** cURL & Browser DevTools
 - **Version Control:** Git & GitHub
 
-## 🗄️ Database Schema (`plantora.db`)
-1. **`crops` Table:** `id` (PK), `name` (UNIQUE), `disease`, `confidence`, `remedy`, `buy_link`
-2. **`scans` Table:** `id` (PK), `crop_id` (FK -> `crops.id`), `crop`, `filename`, `disease`, `confidence`, `status` (`Pending`/`Treated`), `timestamp`
+## 📂 Backend & Project Structure
+```text
+plantora/
+├── backend/
+│   ├── app.py          # Flask REST API, CRUD routes, Pillow validation & error handlers
+│   └── plantora.db     # SQLite relational database (crops & scans tables)
+├── frontend/
+│   └── index.html      # Interactive UI connected to Flask APIs
+└── README.md           # Project & API documentation
+```
 
-## ✅ Completed Features (Up to Day 9)
-- RESTful Flask Backend with Pillow leaf-image validation.
-- Relational SQLite database (`crops` & `scans` tables) with Foreign Key mapping.
-- Full **CRUD Operations**:
-  - **Create:** `POST /predict` (logs new scans)
-  - **Read:** `GET /history` & `GET /db-tables` (fetches scans & table data)
-  - **Update:** `PUT /history/<id>` (marks scan status as `Treated`)
-  - **Delete:** `DELETE /history/<id>` (removes scan record)
-- Interactive Frontend UI with live Scan History table and instant Treated/Delete actions.
+## 🔌 Implemented API Endpoints (Day 10)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/` | Serves the PLANTORA frontend web interface |
+| `GET` | `/status` | Backend health check & SQLite database connectivity status |
+| `GET` | `/api/crops` | Fetches all supported crops and remedies from the `crops` table |
+| `POST` | `/predict` | Validates leaf image, predicts disease, and inserts scan into `scans` table |
+| `GET` | `/history` | Retrieves the 10 most recent scan records from the database |
+| `PUT` | `/history/<id>` | Updates a scan record's status to `Treated` |
+| `DELETE` | `/history/<id>` | Deletes a specific scan record from the database |
+| `GET` | `/db-tables` | Returns structured JSON of both `crops` and `scans` tables |
+
+*Global JSON error handlers (`404 Not Found` and `405 Method Not Allowed`) are implemented for invalid API requests.*
 
 ## 🚀 How to Run Locally
 1. Install dependencies: `pip install flask pillow`

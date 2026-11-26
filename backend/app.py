@@ -25,7 +25,6 @@ def init_db():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    # Table 1: Crops & Remedies
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS crops (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -37,7 +36,6 @@ def init_db():
         )
     ''')
 
-    # Seed default crops if table is empty
     cursor.execute('SELECT COUNT(*) FROM crops')
     if cursor.fetchone()[0] == 0:
         cursor.executemany(
@@ -45,7 +43,6 @@ def init_db():
             DEFAULT_CROPS
         )
 
-    # Table 2: Scan History (linked to crops)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS scans (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -60,7 +57,6 @@ def init_db():
         )
     ''')
 
-    # Safely add new columns if upgrading from Day 8 database
     try:
         cursor.execute("ALTER TABLE scans ADD COLUMN status TEXT DEFAULT 'Pending'")
     except sqlite3.OperationalError:
@@ -96,9 +92,34 @@ def home():
 # Route 2: API Health Check
 @app.route('/status', methods=['GET'])
 def status():
-    return jsonify({'status': 'running', 'database': 'SQLite connected (plantora.db)'}), 200
+    return jsonify({
+        'status': 'running',
+        'service': 'PLANTORA Backend API',
+        'database': 'SQLite connected (plantora.db)'
+    }), 200
 
-# Route 3: CREATE - Predict & Insert Scan into DB
+# Route 3: READ - Fetch All Supported Crops & Remedies
+@app.route('/api/crops', methods=['GET'])
+def get_crops():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute('SELECT id, name, disease, confidence, remedy FROM crops')
+    rows = cursor.fetchall()
+    conn.close()
+
+    crops_list = [
+        {
+            'id': r[0],
+            'name': r[1].capitalize(),
+            'disease': r[2],
+            'confidence': r[3],
+            'remedy': r[4]
+        }
+        for r in rows
+    ]
+    return jsonify({'status': 'success', 'total_crops': len(crops_list), 'crops': crops_list}), 200
+
+# Route 4: CREATE - Predict & Insert Scan into DB
 @app.route('/predict', methods=['POST'])
 def predict():
     crop_name = request.form.get('crop', '').strip().lower()
@@ -146,7 +167,7 @@ def predict():
         'timestamp': scan_time
     }), 200
 
-# Route 4: READ - Fetch Scan History
+# Route 5: READ - Fetch Scan History
 @app.route('/history', methods=['GET'])
 def history():
     conn = sqlite3.connect(DB_PATH)
@@ -169,7 +190,7 @@ def history():
     ]
     return jsonify({'status': 'success', 'total_scans': len(history_list), 'history': history_list}), 200
 
-# Route 5: UPDATE - Mark a scan as Treated
+# Route 6: UPDATE - Mark a scan as Treated
 @app.route('/history/<int:scan_id>', methods=['PUT'])
 def update_scan(scan_id):
     conn = sqlite3.connect(DB_PATH)
@@ -183,7 +204,7 @@ def update_scan(scan_id):
         return jsonify({'error': 'Scan record not found.'}), 404
     return jsonify({'status': 'success', 'message': f'Scan #{scan_id} marked as Treated.'}), 200
 
-# Route 6: DELETE - Remove a scan record
+# Route 7: DELETE - Remove a scan record
 @app.route('/history/<int:scan_id>', methods=['DELETE'])
 def delete_scan(scan_id):
     conn = sqlite3.connect(DB_PATH)
@@ -197,7 +218,7 @@ def delete_scan(scan_id):
         return jsonify({'error': 'Scan record not found.'}), 404
     return jsonify({'status': 'success', 'message': f'Scan #{scan_id} deleted.'}), 200
 
-# Route 7: View Both Database Tables (for DB verification)
+# Route 8: View Both Database Tables
 @app.route('/db-tables', methods=['GET'])
 def db_tables():
     conn = sqlite3.connect(DB_PATH)
@@ -208,6 +229,15 @@ def db_tables():
     scans = [{'id': r[0], 'crop_id': r[1], 'crop': r[2], 'disease': r[3], 'status': r[4] or 'Pending', 'timestamp': r[5]} for r in cursor.fetchall()]
     conn.close()
     return jsonify({'database': 'plantora.db', 'tables': {'crops': crops, 'scans': scans}}), 200
+
+# Global JSON Error Handlers
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({'status': 'error', 'code': 404, 'message': 'API endpoint not found.'}), 404
+
+@app.errorhandler(405)
+def method_not_allowed(error):
+    return jsonify({'status': 'error', 'code': 405, 'message': 'HTTP method not allowed on this endpoint.'}), 405
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
