@@ -1,59 +1,39 @@
 # PLANTORA
-# plantora
-## Project Status
+# PLANTORA – Functional Testing & Debugging Report (Day 12)
 
-Development environment setup completed.
-Git and GitHub integration successful.
+**Project:** PLANTORA – Intelligent Crop Health Monitoring & Smart Farming System  
+**Intern:** Mounika Devi Chennam  
+**Domain:** AI & Automation  
 
-## Project Modules
+---
 
-1. **Frontend (User Interface):** Handles user interactions, allowing users to upload crop images (rice, tomato, potato, chilli) and view the disease detection results clearly.
-2. **Backend (API & Data Routing):** Acts as the bridge between the frontend and the AI model. It receives uploaded images, sends them for processing, and returns the results to the user.
-3. **AI & Automation (Processing):** The core module containing the deep learning model trained on crop datasets. It analyzes the uploaded images to predict and identify crop diseases.
-4. **Storage & Data Management:** Responsible for securely saving user-uploaded images, prediction logs, and system data.
+## 1. Executed Test Cases
 
-## Requirements & Module Planning
-Detailed functional requirements, non-functional requirements, feature breakdown, development priorities, and module-wise task planning are documented in [requirements.md](documentation/requirements.md).
+| Test Case ID | Feature / Module | Test Scenario | Input Data | Expected Result | Actual Result | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **TC-01** | Frontend Validation | Submit form without selecting an image | Crop: `Rice`, Image: `None` | Display red client-side validation error without calling API | Displayed `Validation Error: Please select a leaf image before analyzing.` | Pass |
+| **TC-02** | Leaf Image Validation | Upload a non-leaf image (random photo/screenshot) | Crop: `Tomato`, Image: Non-leaf PNG/JPG | Backend rejects image and returns HTTP `400` error | Red error box displayed: `Invalid image! Please upload a clear plant leaf photo.` | Pass |
+| **TC-03** | End-to-End Scan (`POST /predict`) | Upload a valid crop leaf image | Crop: `Tomato`, Image: Valid leaf JPG | Disable button, show loading state, save to SQLite, display result & refresh history | Result displayed with Estimated Possibility & Disclaimer; new row added to Scan History | Pass |
+| **TC-04** | Update Status (`PUT /history/<id>`) | Mark a pending scan as `Treated` | Click `Treated` button on latest scan row | Update status to `Treated` in SQLite and reflect in UI | Status updated to green `Treated` badge immediately | Pass |
+| **TC-05** | Delete Record (`DELETE /history/<id>`) | Delete an existing scan record | Click `Delete` button on a scan row | Remove record from SQLite and refresh Scan History table | Record deleted and table refreshed without page reload | Pass |
+| **TC-06** | API Error Handling (`404`) | Request an invalid/non-existent API route | `GET /wrong-url` | Return structured JSON `404` error instead of raw HTML | Returned clean JSON error with HTTP `404` status | Pass |
 
-# 🌿 PLANTORA – Intelligent Crop Health Monitoring & Smart Farming System
+---
 
-## 📌 Project Overview
-**PLANTORA** is an AI-powered crop disease detection and remedy recommendation web application with a Python/Flask RESTful backend, Pillow leaf-image validation, and a relational SQLite database.
+## 2. Bugs Identified & Resolved
 
-## 🛠️ Technologies & Tools Used
-- **Backend:** Python 3.13, Flask (REST API)
-- **Database:** SQLite (`plantora.db`) with Relational Schema & Full CRUD
-- **Image Validation:** Pillow (PIL)
-- **Frontend:** HTML5, CSS3, JavaScript (Fetch API)
-- **API Testing:** cURL & Browser DevTools
-- **Version Control:** Git & GitHub
+1. **Duplicate Database Records on Rapid Clicks:**
+   * *Issue:* Clicking the "Analyze Crop" button multiple times quickly while a request was in progress inserted duplicate scan rows into SQLite.
+   * *Fix:* Disabled the submit button (`analyzeBtn.disabled = true`) and added a visible loading indicator during API execution, re-enabling it in the `finally` block.
+   * *Retest:* Verified single record insertion per submission.
 
-## 📂 Backend & Project Structure
-```text
-plantora/
-├── backend/
-│   ├── app.py          # Flask REST API, CRUD routes, Pillow validation & error handlers
-│   └── plantora.db     # SQLite relational database (crops & scans tables)
-├── frontend/
-│   └── index.html      # Interactive UI connected to Flask APIs
-└── README.md           # Project & API documentation
-```
+2. **Raw HTML Error Pages on Invalid API Routes:**
+   * *Issue:* Requesting an undefined endpoint returned default HTML error pages instead of JSON.
+   * *Fix:* Implemented global `@app.errorhandler(404)` and `@app.errorhandler(405)` handlers returning standardized JSON error responses.
+   * *Retest:* Verified clean JSON responses for invalid routes.
 
-## 🔌 Implemented API Endpoints (Day 10)
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/` | Serves the PLANTORA frontend web interface |
-| `GET` | `/status` | Backend health check & SQLite database connectivity status |
-| `GET` | `/api/crops` | Fetches all supported crops and remedies from the `crops` table |
-| `POST` | `/predict` | Validates leaf image, predicts disease, and inserts scan into `scans` table |
-| `GET` | `/history` | Retrieves the 10 most recent scan records from the database |
-| `PUT` | `/history/<id>` | Updates a scan record's status to `Treated` |
-| `DELETE` | `/history/<id>` | Deletes a specific scan record from the database |
-| `GET` | `/db-tables` | Returns structured JSON of both `crops` and `scans` tables |
+---
 
-*Global JSON error handlers (`404 Not Found` and `405 Method Not Allowed`) are implemented for invalid API requests.*
-
-## 🚀 How to Run Locally
-1. Install dependencies: `pip install flask pillow`
-2. Start server: `python backend/app.py`
-3. Open `http://127.0.0.1:5000/` in your browser.
+## 3. Pending Issues / Planned Enhancements
+* **Static Crop Remedy Mapping:** Currently, predictions map to stored crop remedies in SQLite. Integrating a fine-tuned MobileNetV2 disease detection model, ChromaDB RAG with verified agricultural documents, and the Gemini API for 5-language explanations is planned for the upcoming development stages.
+* **Direct Camera Capture:** Currently supports gallery file upload; direct camera capture will be added in the next UI upgrade.
